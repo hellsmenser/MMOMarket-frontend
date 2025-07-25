@@ -1,0 +1,33 @@
+.header-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: 100%;
+}
+
+.category-select {
+  width: 200px;
+}
+
+.search-input {
+  width: 450px;
+}
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background-color: #00152a;
+}
+
+.header-logo {
+  color: #00ff8f;
+  font-weight: bold;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.header-controls {
+  display: flex;
+  gap: 12px;
+}

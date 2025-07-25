@@ -1,0 +1,22 @@
+.item-page {
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.item-title {
+  margin: 0;
+}
+
+.modification-select {
+  min-width: 220px;
+}

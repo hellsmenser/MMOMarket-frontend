@@ -1,9 +1,18 @@
+import type { CategoryOut } from "./category";
+
+export interface ItemActivity {
+  id: number;
+  name: string;
+  category: CategoryOut;
+  price: number;
+  сurrency?: string;
+  activity: number;
+}
+
 export interface ItemOut {
   id: number;
   name: string;
-  category: string;
-  price: number;
-  price_change_1d: number;
-  price_change_7d: number;
-  volatility: number;
+  category: CategoryOut;
+  tolerance: number;
+  modifications: string[];
 }

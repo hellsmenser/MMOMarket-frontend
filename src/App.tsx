@@ -1,13 +1,16 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
+import ItemPage from './pages/ItemPage';
+import MainLayout from './layouts/MainLayouts';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <Routes>
+      <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
-      </Routes>
-    </BrowserRouter>
+        <Route path="/items/:id" element={<ItemPage />} />
+      </Route>
+    </Routes>
   );
 }
 

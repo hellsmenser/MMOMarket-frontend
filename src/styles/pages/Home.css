@@ -1,0 +1,10 @@
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+}
+
+.table-category-select {
+  width: 200px;
+}

@@ -1,54 +1,51 @@
+import { Select } from 'antd';
 import { useEffect, useState } from 'react';
-import { Layout, Table } from 'antd';
 import { fetchVolatileItems } from '../services/items';
-import type { ItemOut } from '../types/item';
-import HeaderBar from '../components/HeaderBar';
+import { fetchCategories } from '../services/caterogies';
+import type { CategoryOut  } from '../types/category';
+import type { ItemActivity } from '../types/item';
+import '../styles/pages/Home.css';
+import Title from 'antd/es/typography/Title';
+import ItemTable from '../components/ItemTable';
 
-const { Header, Content } = Layout;
+const { Option } = Select;
 
 export default function Home() {
-  const [items, setItems] = useState<ItemOut[]>([]);
-  const [category, setCategory] = useState<string>();
-  const [search, setSearch] = useState<string>('');
+  const [items, setItems] = useState<ItemActivity[]>([]);
+  const [categories, setCategories] = useState<CategoryOut[]>([]);
+  const [category, setCategory] = useState<CategoryOut>();
 
   useEffect(() => {
-    fetchVolatileItems(category, search).then(setItems);
-  }, [category, search]);
+    fetchCategories().then(setCategories);
+  }, []);
+
+  useEffect(() => {
+    fetchVolatileItems(category?.id).then(setItems);
+  }, [category]);
+
+  const handleCategoryChange = (value?: string) => {
+    setCategory(categories.find(cat => cat.name === value));
+  };
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Header style={{ background: '#001529', padding: '0 20px' }}>
-        <HeaderBar
-          onCategoryChange={setCategory}
-          onSearch={setSearch}
-        />
-      </Header>
-      <Content style={{ padding: 24 }}>
-        <Table
-          dataSource={items}
-          rowKey="id"
-          columns={[
-            { title: 'Название', dataIndex: 'name', key: 'name' },
-            { title: 'Категория', dataIndex: 'category', key: 'category' },
-            { title: 'Цена', dataIndex: 'price', key: 'price' },
-            {
-              title: 'Изм. 24ч',
-              dataIndex: 'price_change_1d',
-              render: (v: number) => `${v > 0 ? '+' : ''}${v}%`,
-            },
-            {
-              title: 'Изм. 7д',
-              dataIndex: 'price_change_7d',
-              render: (v: number) => `${v > 0 ? '+' : ''}${v}%`,
-            },
-            {
-              title: 'Волатильность',
-              dataIndex: 'volatility',
-              sorter: (a, b) => a.volatility - b.volatility,
-            },
-          ]}
-        />
-      </Content>
-    </Layout>
+    <div className="home-page">
+      <div className="table-header">
+        <Title level={3} className="table-title">Волатильные предметы</Title>
+        <Select
+          placeholder="Категория"
+          value={category?.name}
+          onChange={(value) => handleCategoryChange(value || undefined)}
+          allowClear
+          className="table-category-select"
+        >
+          <Option value="">Все категории</Option>
+          {categories.map((cat) => (
+            <Option key={cat.id} value={cat.name}>{cat.name}</Option>
+          ))}
+        </Select>
+      </div>
+
+      <ItemTable items={items} />
+    </div>
   );
 }
