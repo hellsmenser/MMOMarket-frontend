@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import { viteMockServe } from 'vite-plugin-mock';
 
 export default defineConfig(({ command }) => ({
+  base: '/MMOMarket-frontend/',
   plugins: [
     react(),
     viteMockServe({
