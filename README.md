@@ -1,54 +1,81 @@
-# React + TypeScript + Vite
+<div align="center">
+  <img src="public/logo.svg"/>
+  <h1>MMO Market Front</h1>
+  <p>Веб-приложение для мониторинга цен игровых предметов и валюты Lineage 2</p>
+  <a href="https://hellsmenser.github.io/MMOMarket-frontend/" target="_blank" style="font-size:18px;font-weight:600;color:#00ff8f;">🌐 Открыть демо на GitHub Pages</a>
+</div>
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+---
 
-Currently, two official plugins are available:
+## 🚀 О проекте
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+MMO Market Front — это современный интерфейс для отслеживания истории цен предметов и монеты в Lineage 2. Проект позволяет искать предметы, просматривать их модификации, анализировать динамику цен в адене и монетах, а также получать актуальную стоимость монеты.
 
-## Expanding the ESLint configuration
+Бэкенд проекта: [MMO Market API](https://github.com/your-org/L2MarketBack)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Основные возможности
+- Поиск предметов с автодополнением
+- Просмотр истории цен по дням и модификациям
+- Графики цен в адене и монетах
+- Выбор периода и типа агрегации (среднее/минимальное)
+- Дисклеймеры для предметов с несколькими модификациями
+- Отображение актуальной цены монеты
+- Обработка ошибок (404, отсутствие истории)
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## 🛠️ Технологии
+- React + TypeScript
+- Vite
+- Ant Design
+- Recharts
+
+## ⚡ Быстрый старт
+
+1. Клонируйте репозиторий:
+   ```sh
+   git clone https://github.com/hellsmenser/L2MarketFront.git
+   cd L2MarketFront
+   ```
+2. Установите зависимости:
+   ```sh
+   npm install
+   ```
+3. Запустите приложение:
+   ```sh
+   npm run dev
+   ```
+4. Откройте [http://localhost:5173](http://localhost:5173) в браузере
+
+## 📁 Структура проекта
+
+```
+src/
+  components/      # UI компоненты (HeaderBar, PriceChart, ItemTable)
+  layouts/         # Основные шаблоны страниц
+  pages/           # Страницы (Home, ItemPage)
+  services/        # API-запросы
+  styles/          # Стили
+  types/           # Типы данных
+  utils/           # Вспомогательные функции
+mock/              # Моковые данные для разработки
+public/            # Статические файлы
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 📝 API
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- `/items/:id` — информация о предмете
+- `/items/:id/history` — история цен
+- `/prices/coin` — текущая цена монеты
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+
+## 💡 Контакты и поддержка
+
+- 🌐 Попробовать: [https://hellsmenser.github.io/MMOMarket-frontend/](https://hellsmenser.github.io/MMOMarket-frontend/)
+- Telegram: [@hellsmenser](https://t.me/hellsmenser)
+- Issues: [GitHub Issues](https://github.com/hellsmenser/MMOMarket-frontend/issues)
+- Backend: [MMO Market API](https://github.com/hellsmenser/MMOmarket)
+
+---
+
+<div align="center">
+  <sub>Made with ❤️ for Lineage 2 Community</sub>
+</div>

@@ -13,21 +13,26 @@ const { Option } = Select;
 export default function ItemPage() {
   const { id } = useParams();
   const [item, setItem] = useState<ItemOut | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingItem, setLoadingItem] = useState(true);
+  const [loadingHistory, setLoadingHistory] = useState(true);
   const [selectedMod, setSelectedMod] = useState<string | undefined>(undefined);
-  const [currency, setCurrency] = useState<'adena' | 'coin'>('adena');
+  const [activeTab, setActiveTab] = useState<'adena' | 'coin'>('adena');
   const [aggregation, setAggregation] = useState<'avg' | 'min'>('avg');
   const [period, setperiod] = useState<number | 'all'>(30);
   const [history, setHistory] = useState<PriceHistory[] | null>(null);
 
 
   useEffect(() => {
+    setLoadingItem(true);
     fetchItemById(Number(id))
-      .then(setItem)
+      .then(data => {
+        setItem(data);
+        setLoadingItem(false);
+      })
       .catch(err => {
         if (err?.response?.status === 404) {
           setItem(null);
-          setLoading(false);
+          setLoadingItem(false);
         }
       });
   }, [id]);
@@ -36,11 +41,13 @@ export default function ItemPage() {
     if (item?.modifications && item.modifications.length > 0) {
       const minMod = [...item.modifications].sort()[0];
       setSelectedMod(minMod);
+    } else {
+      setSelectedMod(undefined);
     }
   }, [item]);
 
   useEffect(() => {
-    setLoading(true);
+    setLoadingHistory(true);
     let modArg: number | null = null;
     if (selectedMod !== undefined && selectedMod !== null) {
       modArg = Number(selectedMod);
@@ -48,13 +55,12 @@ export default function ItemPage() {
     fetchItemPriceHistory(Number(id), period, modArg, aggregation)
       .then(data => {
         setHistory(data);
-        console.log('Price history:', data);
-        setLoading(false);
+        setLoadingHistory(false);
       })
       .catch(err => {
         if (err?.response?.status === 404) {
           setHistory(null);
-          setLoading(false);
+          setLoadingHistory(false);
         }
       });
   }, [id, period, selectedMod, aggregation]);
@@ -82,15 +88,29 @@ export default function ItemPage() {
       }));
   }, [history]);
 
-  const isRare = useMemo(() => {
+
+  // Определяем редкость отдельно для адены и монеты
+  const isRareAdena = useMemo(() => {
     if (!history) return false;
-    const totalPoints = history.length;
-    const days = period === 'all' ? totalPoints : period;
-    return (totalPoints / days) < (1 / 7);
+    const adenaPoints = history.filter(h => h.adena != null).length;
+    const days = period === 'all' ? history.length : period;
+    return (adenaPoints / days) < (1 / 7);
+  }, [history, period]);
+
+  const isRareCoin = useMemo(() => {
+    if (!history) return false;
+    const coinPoints = history.filter(h => h.coin != null).length;
+    const days = period === 'all' ? history.length : period;
+    return (coinPoints / days) < (1 / 7);
   }, [history, period]);
 
 
-  if (loading) return <Spin />;
+
+  if (loadingItem) return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300 }}>
+      <Spin size="large" />
+    </div>
+  );
   if (!item) {
     return (
       <div style={{ textAlign: 'center', marginTop: 40, color: '#ff4d4f', fontSize: 18 }}>
@@ -99,149 +119,45 @@ export default function ItemPage() {
     );
   }
 
-  // ...рендер основной страницы...
-
-  return (
-    <div className="item-page">
-      <div className="item-header">
-        <Title level={2} className="item-title">{item?.name ?? ''}</Title>
-        {item && item.modifications && item.modifications.length > 0 && (
-          <>
-            {item.modifications.length > 1 && (
-              <div style={{ marginBottom: 8, color: '#ff9800', fontSize: 13 }}>
-                Обратите внимание: для предметов с несколькими модификациями их определение производится автоматически, поэтому реальная модификация может отличаться от отображаемой.
-              </div>
-            )}
-            <Select
-              className="modification-select"
-              value={selectedMod}
-              onChange={setSelectedMod}
-              placeholder="Выберите модификацию"
-              allowClear
-              size="middle"
-            >
-              {item.modifications.map((mod) => (
-                <Option key={mod} value={mod}>{mod}</Option>
-              ))}
-            </Select>
-          </>
-        )}
-      </div>
-
-      <div className="period-selector" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
-        <Radio.Group value={period} onChange={(e) => setperiod(e.target.value)}>
-          <Radio.Button value={7}>7д</Radio.Button>
-          <Radio.Button value={30}>30д</Radio.Button>
-          <Radio.Button value={60}>60д</Radio.Button>
-          <Radio.Button value={90}>90д</Radio.Button>
-        </Radio.Group>
-        <Radio.Group value={aggregation} onChange={e => setAggregation(e.target.value)}>
-          <Radio.Button value="avg">Среднее</Radio.Button>
-          <Radio.Button value="min">Минимальное</Radio.Button>
-        </Radio.Group>
-      </div>
-
-      {!history || history.length === 0 ? (
+  // Вынесенная часть для графика и истории
+  function ItemHistoryView() {
+    if (loadingHistory) {
+      return (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+          <Spin size="large" />
+        </div>
+      );
+    }
+    if (!history || history.length === 0) {
+      return (
         <div style={{ textAlign: 'center', margin: '32px 0', color: '#ff9800', fontSize: 16 }}>
           Для выбранных параметров не найдено истории продаж.
         </div>
-      ) : (
-        <Tabs
-          defaultActiveKey="adena"
-          onChange={(key) => setCurrency(key as 'adena' | 'coin')}
-          className="currency-tabs"
-          items={[
-            {
-              label: 'Адена',
-              key: 'adena',
-              children: isRare ? (
-                <Table
-                  columns={[
-                    { title: 'Дата', dataIndex: 'date', key: 'date' },
-                    { title: 'Цена', dataIndex: 'value', key: 'value', render: v => v.toLocaleString() },
-                  ]}
-                  dataSource={adenaChartData.map((d, i) => ({ ...d, key: i }))}
-                  pagination={false}
-                />
-              ) : (
-                <PriceChart data={adenaChartData} currency="adena" />
-              ),
-            },
-            {
-              label: 'Монета',
-              key: 'coin',
-              children: isRare ? (
-                <Table
-                  columns={[
-                    { title: 'Дата', dataIndex: 'date', key: 'date' },
-                    { title: 'Цена', dataIndex: 'value', key: 'value', render: v => v.toLocaleString() },
-                  ]}
-                  dataSource={coinChartData.map((d, i) => ({ ...d, key: i }))}
-                  pagination={false}
-                />
-              ) : (
-                <PriceChart data={coinChartData} currency="coin" />
-              ),
-            },
-          ]}
-        />
-      )}
-    </div>
-  );
-
-  return (
-    <div className="item-page">
-      <div className="item-header">
-        <Title level={2} className="item-title">{item.name}</Title>
-        {item.modifications?.length > 0 && (
-          <>
-            {item.modifications.length > 1 && (
-              <div style={{ marginBottom: 8, color: '#ff9800', fontSize: 13 }}>
-                Обратите внимание: для предметов с несколькими модификациями их определение производится автоматически, поэтому реальная модификация может отличаться от отображаемой.
-              </div>
-            )}
-            <Select
-              className="modification-select"
-              value={selectedMod}
-              onChange={setSelectedMod}
-              placeholder="Выберите модификацию"
-              allowClear
-              size="middle"
-            >
-              {item.modifications.map((mod) => (
-                <Option key={mod} value={mod}>{mod}</Option>
-              ))}
-            </Select>
-          </>
-        )}
-      </div>
-
-      <div className="period-selector" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
-        <Radio.Group value={period} onChange={(e) => setperiod(e.target.value)}>
-          <Radio.Button value={7}>7д</Radio.Button>
-          <Radio.Button value={30}>30д</Radio.Button>
-          <Radio.Button value={60}>60д</Radio.Button>
-          <Radio.Button value={90}>90д</Radio.Button>
-        </Radio.Group>
-        <Radio.Group value={aggregation} onChange={e => setAggregation(e.target.value)}>
-          <Radio.Button value="avg">Среднее</Radio.Button>
-          <Radio.Button value="min">Минимальное</Radio.Button>
-        </Radio.Group>
-      </div>
-
+      );
+    }
+    return (
       <Tabs
-        defaultActiveKey="adena"
-        onChange={(key) => setCurrency(key as 'adena' | 'coin')}
+        activeKey={activeTab}
+        onChange={(key) => setActiveTab(key as 'adena' | 'coin')}
         className="currency-tabs"
         items={[
           {
             label: 'Адена',
             key: 'adena',
-            children: isRare ? (
+            children: isRareAdena ? (
               <Table
                 columns={[
                   { title: 'Дата', dataIndex: 'date', key: 'date' },
                   { title: 'Цена', dataIndex: 'value', key: 'value', render: v => v.toLocaleString() },
+                  {
+                    title: 'По курсу (монета)',
+                    dataIndex: 'coin_price',
+                    key: 'coin_price',
+                    render: (coin_price, row) => {
+                      if (!coin_price || !row.value) return '-';
+                      return Math.round(row.value / coin_price).toLocaleString();
+                    },
+                  },
                 ]}
                 dataSource={adenaChartData.map((d, i) => ({ ...d, key: i }))}
                 pagination={false}
@@ -253,11 +169,20 @@ export default function ItemPage() {
           {
             label: 'Монета',
             key: 'coin',
-            children: isRare ? (
+            children: isRareCoin ? (
               <Table
                 columns={[
                   { title: 'Дата', dataIndex: 'date', key: 'date' },
                   { title: 'Цена', dataIndex: 'value', key: 'value', render: v => v.toLocaleString() },
+                  {
+                    title: 'По курсу (адена)',
+                    dataIndex: 'coin_price',
+                    key: 'coin_price',
+                    render: (coin_price, row) => {
+                      if (!coin_price || !row.value) return '-';
+                      return Math.round(row.value * coin_price).toLocaleString();
+                    },
+                  },
                 ]}
                 dataSource={coinChartData.map((d, i) => ({ ...d, key: i }))}
                 pagination={false}
@@ -268,6 +193,94 @@ export default function ItemPage() {
           },
         ]}
       />
+    );
+  }
+
+  return (
+    <div className="item-page">
+      <div className="item-header">
+        <Title level={2} className="item-title">{item?.name ?? ''}</Title>
+        {(item as ItemOut).modifications && (item as ItemOut).modifications.length > 0 && (
+          <>
+            {(item as ItemOut).modifications.length > 1 && (
+              <div style={{ marginBottom: 8, color: '#ff9800', fontSize: 13 }}>
+                Обратите внимание: для предметов с несколькими модификациями их определение производится автоматически, поэтому реальная модификация может отличаться от отображаемой.
+              </div>
+            )}
+            <Select
+              className="modification-select"
+              value={selectedMod}
+              onChange={setSelectedMod}
+              placeholder="Выберите модификацию"
+              allowClear
+              size="middle"
+            >
+              {(item as ItemOut).modifications.map((mod) => (
+                <Option key={mod} value={mod}>{mod}</Option>
+              ))}
+            </Select>
+          </>
+        )}
+      </div>
+
+      <div className="period-selector" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+        <Radio.Group value={period} onChange={(e) => setperiod(e.target.value)}>
+          <Radio.Button value={7}>7д</Radio.Button>
+          <Radio.Button value={30}>30д</Radio.Button>
+          <Radio.Button value={60}>60д</Radio.Button>
+          <Radio.Button value={90}>90д</Radio.Button>
+        </Radio.Group>
+        <Radio.Group value={aggregation} onChange={e => setAggregation(e.target.value)}>
+          <Radio.Button value="avg">Среднее</Radio.Button>
+          <Radio.Button value="min">Минимальное</Radio.Button>
+        </Radio.Group>
+      </div>
+
+      <ItemHistoryView key={String(selectedMod) + String(period) + String(aggregation)} />
+    </div>
+  );
+
+  return (
+    <div className="item-page">
+      <div className="item-header">
+        <Title level={2} className="item-title">{item?.name ?? ''}</Title>
+        {(item as ItemOut).modifications && (item as ItemOut).modifications.length > 0 && (
+          <>
+            {(item as ItemOut).modifications.length > 1 && (
+              <div style={{ marginBottom: 8, color: '#ff9800', fontSize: 13 }}>
+                Обратите внимание: для предметов с несколькими модификациями их определение производится автоматически, поэтому реальная модификация может отличаться от отображаемой.
+              </div>
+            )}
+            <Select
+              className="modification-select"
+              value={selectedMod}
+              onChange={setSelectedMod}
+              placeholder="Выберите модификацию"
+              allowClear
+              size="middle"
+            >
+              {(item as ItemOut).modifications.map((mod) => (
+                <Option key={mod} value={mod}>{mod}</Option>
+              ))}
+            </Select>
+          </>
+        )}
+      </div>
+
+      <div className="period-selector" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+        <Radio.Group value={period} onChange={(e) => setperiod(e.target.value)}>
+          <Radio.Button value={7}>7д</Radio.Button>
+          <Radio.Button value={30}>30д</Radio.Button>
+          <Radio.Button value={60}>60д</Radio.Button>
+          <Radio.Button value={90}>90д</Radio.Button>
+        </Radio.Group>
+        <Radio.Group value={aggregation} onChange={e => setAggregation(e.target.value)}>
+          <Radio.Button value="avg">Среднее</Radio.Button>
+          <Radio.Button value="min">Минимальное</Radio.Button>
+        </Radio.Group>
+      </div>
+
+      {/* Дублирующийся старый return удалён, теперь используется только ItemHistoryView с isRareAdena/isRareCoin */}
     </div>
   );
 }
