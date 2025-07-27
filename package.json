@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "clean": "rimraf dist",
-    "deploy": "npm run clean && vite build && gh-pages -d dist"
+    "deploy": "npm run clean && npm run build && gh-pages -d dist"
   },
   "dependencies": {
     "antd": "^5.26.0",

@@ -90,7 +90,7 @@ export default function HeaderBar() {
   return (
     <div className="header-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
       <div className="header-logo" onClick={() => navigate('/')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, minHeight: 48, minWidth: 48 }}>
-        <img src="/logo.svg" alt="MMO Market Logo" style={{ height: 48, width: 'auto', display: 'block', objectFit: 'contain' }} />
+        <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="MMO Market Logo" style={{ height: 48, width: 'auto', display: 'block', objectFit: 'contain' }} />
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
         <span style={{ fontSize: 15, color: '#00ff8f', fontWeight: 500, display: 'inline-block', minWidth: '210px' }}>
