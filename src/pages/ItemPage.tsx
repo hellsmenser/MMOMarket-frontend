@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { Select, Tabs, Typography, Spin, Table, Radio, Button } from 'antd';
+import { Select, Tabs, Typography, Spin, Table, Radio } from 'antd';
 import { fetchItemById, fetchItemPriceHistory } from '../services/items';
 import type { ItemOut } from '../types/item';
 import '../styles/pages/ItemPage.css';

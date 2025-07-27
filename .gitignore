@@ -2,6 +2,7 @@
 node_modules/
 
 # Build output
+dsit/
 build/
 
 # System files
