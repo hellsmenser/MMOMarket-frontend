@@ -15,8 +15,13 @@
 
 .item-title {
   margin: 0;
+  max-width: 60%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .modification-select {
   min-width: 220px;
+  margin-left: auto;
 }

@@ -30,7 +30,7 @@ export default function Home() {
   return (
     <div className="home-page">
       <div className="table-header">
-        <Title level={3} className="table-title">Волатильные предметы</Title>
+        <Title level={3} className="table-title">ТОП предметы</Title>
         <Select
           placeholder="Категория"
           value={category?.name}

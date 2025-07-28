@@ -46,24 +46,27 @@ export default function ItemPage() {
     }
   }, [item]);
 
-  useEffect(() => {
-    setLoadingHistory(true);
-    let modArg: number | null = null;
-    if (selectedMod !== undefined && selectedMod !== null) {
-      modArg = Number(selectedMod);
-    }
-    fetchItemPriceHistory(Number(id), period, modArg, aggregation)
-      .then(data => {
-        setHistory(data);
+useEffect(() => {
+  setLoadingHistory(true);
+  let modArg: number | null = null;
+  if (item?.modifications && item.modifications.length > 0) {
+    const minMod = [...item.modifications].sort()[0];
+    modArg = Number(selectedMod ?? minMod);
+  } else if (selectedMod !== undefined && selectedMod !== null) {
+    modArg = Number(selectedMod);
+  }
+  fetchItemPriceHistory(Number(id), period, modArg, aggregation)
+    .then(data => {
+      setHistory(data);
+      setLoadingHistory(false);
+    })
+    .catch(err => {
+      if (err?.response?.status === 404) {
+        setHistory(null);
         setLoadingHistory(false);
-      })
-      .catch(err => {
-        if (err?.response?.status === 404) {
-          setHistory(null);
-          setLoadingHistory(false);
-        }
-      });
-  }, [id, period, selectedMod, aggregation]);
+      }
+    });
+}, [id, period, selectedMod, aggregation, item]);
 
 
   const adenaChartData = useMemo(() => {
