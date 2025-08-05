@@ -70,28 +70,33 @@ useEffect(() => {
 
 
   // Формируем данные для графика из новых полей
+  // Для графика и таблицы: фильтруем только те дни, где есть цена в выбранной валюте
   const adenaChartData = useMemo(() => {
     if (!history) return [];
-    return history.map(entry => ({
-      timestamp: entry.timestamp,
-      adena_avg: entry.adena_avg ?? null,
-      adena_min: entry.adena_min ?? null,
-      adena_volume: entry.adena_volume ?? null,
-      coin_price: entry.coin_price ?? null,
-      value: entry.adena_avg ?? null, // for Table rendering
-    }));
+    return history
+      .filter(entry => typeof entry.adena_avg === 'number' && entry.adena_avg !== 0)
+      .map(entry => ({
+        timestamp: entry.timestamp,
+        adena_avg: entry.adena_avg ?? null,
+        adena_min: entry.adena_min ?? null,
+        adena_volume: entry.adena_volume ?? null,
+        coin_price: entry.coin_price ?? null,
+        value: entry.adena_avg ?? null, // for Table rendering
+      }));
   }, [history]);
 
   const coinChartData = useMemo(() => {
     if (!history) return [];
-    return history.map(entry => ({
-      timestamp: entry.timestamp,
-      coin_avg: entry.coin_avg ?? null,
-      coin_min: entry.coin_min ?? null,
-      coin_volume: entry.coin_volume ?? null,
-      coin_price: entry.coin_price ?? null,
-      value: entry.coin_avg ?? null, // for Table rendering
-    }));
+    return history
+      .filter(entry => typeof entry.coin_avg === 'number' && entry.coin_avg !== 0)
+      .map(entry => ({
+        timestamp: entry.timestamp,
+        coin_avg: entry.coin_avg ?? null,
+        coin_min: entry.coin_min ?? null,
+        coin_volume: entry.coin_volume ?? null,
+        coin_price: entry.coin_price ?? null,
+        value: entry.coin_avg ?? null, // for Table rendering
+      }));
   }, [history]);
 
 
@@ -141,6 +146,11 @@ useEffect(() => {
         </div>
       );
     }
+
+    // Проверка наличия валидных данных для таблицы
+    const hasAdenaRows = adenaChartData.some(d => typeof d.value === 'number' && d.value !== 0);
+    const hasCoinRows = coinChartData.some(d => typeof d.value === 'number' && d.value !== 0);
+
     return (
       <Tabs
         activeKey={activeTab}
@@ -150,18 +160,20 @@ useEffect(() => {
           {
             label: 'Адена',
             key: 'adena',
-            children: isRareAdena ? (
+            children: isRareAdena && hasAdenaRows ? (
               <Table
                 columns={[
                   { title: 'Дата', dataIndex: 'date', key: 'date' },
-                  { title: 'Цена', dataIndex: 'value', key: 'value', render: v => v.toLocaleString() },
+                  { title: 'Цена', dataIndex: 'value', key: 'value', render: v => (typeof v === 'number' ? v.toLocaleString() : '-') },
                   {
                     title: 'По курсу (монета)',
                     dataIndex: 'coin_price',
                     key: 'coin_price',
                     render: (coin_price, row) => {
                       if (!coin_price || !row.value) return '-';
-                      return Math.round(row.value / coin_price).toLocaleString();
+                      return (typeof row.value === 'number' && typeof coin_price === 'number')
+                        ? Math.round(row.value / coin_price).toLocaleString()
+                        : '-';
                     },
                   },
                 ]}
@@ -169,24 +181,32 @@ useEffect(() => {
                 pagination={false}
               />
             ) : (
-              <PriceChart data={adenaChartData} currency="adena" />
+              !hasAdenaRows ? (
+                <div style={{ textAlign: 'center', margin: '32px 0', color: '#ff9800', fontSize: 16 }}>
+                  Для выбранных параметров не найдено истории продаж.
+                </div>
+              ) : (
+                <PriceChart data={adenaChartData} currency="adena" />
+              )
             ),
           },
           {
             label: 'Монета',
             key: 'coin',
-            children: isRareCoin ? (
+            children: isRareCoin && hasCoinRows ? (
               <Table
                 columns={[
-                  { title: 'Дата', dataIndex: 'date', key: 'date' },
-                  { title: 'Цена', dataIndex: 'value', key: 'value', render: v => v.toLocaleString() },
+                  { title: 'Дата', dataIndex: 'timestamp', key: 'timestamp' },
+                  { title: 'Цена', dataIndex: 'value', key: 'value', render: v => (typeof v === 'number' ? v.toLocaleString() : '-') },
                   {
                     title: 'По курсу (адена)',
                     dataIndex: 'coin_price',
                     key: 'coin_price',
                     render: (coin_price, row) => {
                       if (!coin_price || !row.value) return '-';
-                      return Math.round(row.value * coin_price).toLocaleString();
+                      return (typeof row.value === 'number' && typeof coin_price === 'number')
+                        ? Math.round(row.value * coin_price).toLocaleString()
+                        : '-';
                     },
                   },
                 ]}
@@ -194,7 +214,13 @@ useEffect(() => {
                 pagination={false}
               />
             ) : (
-              <PriceChart data={coinChartData} currency="coin" />
+              !hasCoinRows ? (
+                <div style={{ textAlign: 'center', margin: '32px 0', color: '#ff9800', fontSize: 16 }}>
+                  Для выбранных параметров не найдено истории продаж.
+                </div>
+              ) : (
+                <PriceChart data={coinChartData} currency="coin" />
+              )
             ),
           },
         ]}
