@@ -28,8 +28,6 @@ export default function HeaderBar() {
   useEffect(() => {
     fetchCoinPrice()
       .then(data => {
-        // Если API возвращает объект с price
-        console.log('Coin price data:', data);
         if (typeof data === 'object' && data !== null && 'coin_price' in data) {
           setCoinPrice(Number(data.coin_price));
         } else {

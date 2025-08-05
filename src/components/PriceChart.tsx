@@ -1,35 +1,27 @@
 import {
-  LineChart,
   Line,
   XAxis,
   YAxis,
   Tooltip,
   CartesianGrid,
   ResponsiveContainer,
+  Bar,
+  ComposedChart,
+  Legend,
 } from 'recharts';
+
+import type { PriceHistory } from '../types/price';
 import type { ValueType, NameType } from 'recharts/types/component/DefaultTooltipContent';
 import type { TooltipProps } from 'recharts';
 
-
 interface Props {
-  data: { date: string; value: number; coin_price?: number | null }[];
-  currency: 'adena' | 'coin';
+  data: PriceHistory[];
+  currency?: 'adena' | 'coin';
 }
-
 
 const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
   if (!active || !payload || !payload.length) return null;
-  const { value, coin_price } = payload[0].payload;
-  let converted = null;
-  if (coin_price && coin_price > 0) {
-    if (payload[0].payload && payload[0].payload.value != null) {
-      // Если график адены, показываем стоимость в монетах
-      // Если график монеты, показываем стоимость в адене
-      converted = payload[0].payload.currency === 'adena'
-        ? `${Math.round(value / coin_price).toLocaleString()} Монет`
-        : `${Math.round(value * coin_price).toLocaleString()} Аден`;
-    }
-  }
+  const p = payload[0].payload;
   return (
     <div style={{
       background: '#1f2d40',
@@ -37,41 +29,138 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameT
       padding: '8px 12px',
       borderRadius: 8,
       color: '#eee',
+      minWidth: 120,
     }}>
       <div style={{ marginBottom: 4 }}>{label}</div>
-      <div>Цена: {value?.toLocaleString()}</div>
-      {converted && <div>По курсу: {converted}</div>}
+      {p.adena_avg != null && <div>Средняя цена: {p.adena_avg.toLocaleString()} аден</div>}
+      {p.adena_min != null && <div>Мин. цена: {p.adena_min.toLocaleString()} аден</div>}
+      {p.adena_volume != null && <div>Объём: {p.adena_volume.toLocaleString()}</div>}
+      {p.coin_avg != null && <div>Средняя цена: {p.coin_avg.toLocaleString()} монет</div>}
+      {p.coin_min != null && <div>Мин. цена: {p.coin_min.toLocaleString()} монет</div>}
+      {p.coin_volume != null && <div>Объём: {p.coin_volume.toLocaleString()}</div>}
     </div>
   );
 };
 
+export default function PriceChart({ data, currency = 'adena' }: Props) {
+  // ...existing code...
+  const maxVolume = Math.max(...data.map((d: PriceHistory) => Math.max(d.adena_volume ?? 0, d.coin_volume ?? 0)), 1);
 
-export default function PriceChart({ data, currency }: Props) {
-  // Форматтер: 1_000 -> 1к, 1_000_000 -> 1кк, 1_000_000_000 -> 1ккк
-  const formatNumber = (num: number) => {
-    if (num === 0) return '0';
-    const absNum = Math.abs(num);
-    if (absNum >= 1_000_000_000) return (num / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'ккк';
-    if (absNum >= 1_000_000) return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'кк';
-    if (absNum >= 1_000) return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'к';
-    return num.toString();
-  };
-
+  // вычисляем min/max для цен
+  let minPrice = 0, maxPrice = 1;
+  if (currency === 'adena') {
+    const prices = data.flatMap(d => [d.adena_avg ?? 0, d.adena_min ?? 0]);
+    minPrice = Math.min(...prices);
+    maxPrice = Math.max(...prices);
+  } else if (currency === 'coin') {
+    const prices = data.flatMap(d => [d.coin_avg ?? 0, d.coin_min ?? 0]);
+    minPrice = Math.min(...prices);
+    maxPrice = Math.max(...prices);
+  }
+  // небольшой отступ сверху/снизу
+  const priceMargin = Math.max(1, Math.round((maxPrice - minPrice) * 0.1));
+  const yDomain = [minPrice - priceMargin, maxPrice + priceMargin];
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={data.map(d => ({ ...d, currency }))}>
-        <CartesianGrid stroke="#2a3b55" strokeDasharray="3 3" />
-        <XAxis dataKey="date" tick={{ fill: '#aaa' }} />
-        <YAxis tick={{ fill: '#aaa' }} tickFormatter={formatNumber} />
+      <ComposedChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+        <CartesianGrid stroke="#2a3b55" vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={{ stroke: "#2a3b55" }} tick={{ fill: '#aaa' }} />
         <Tooltip content={<CustomTooltip />} />
-        <Line
-          type="monotone"
-          dataKey="value"
-          stroke={currency === 'adena' ? '#00ff8f' : '#ffc048'}
-          strokeWidth={2}
-          dot={false}
+        <Legend verticalAlign="top" align="left" height={36} />
+        {currency === 'adena' && (
+          <Bar
+            radius={[10, 10, 0, 0]}
+            dataKey="adena_volume"
+            barSize={20}
+            fill="#2a3b55"
+            yAxisId="right"
+            legendType="rect"
+            name="Объём (адена)"
+          />
+        )}
+        {currency === 'coin' && (
+          <Bar
+            radius={[10, 10, 0, 0]}
+            dataKey="coin_volume"
+            barSize={20}
+            fill="#2a3b55"
+            yAxisId="right"
+            legendType="rect"
+            name="Объём (монета)"
+          />
+        )}
+        {currency === 'adena' && (
+          <Line
+            dot={false}
+            strokeWidth={2}
+            strokeLinecap="round"
+            type="monotone"
+            dataKey="adena_avg"
+            stroke="#00ff8f"
+            yAxisId="left"
+            legendType="rect"
+            name="Средняя цена (адена)"
+          />
+        )}
+        {currency === 'adena' && (
+          <Line
+            dot={false}
+            strokeWidth={2}
+            strokeLinecap="round"
+            type="monotone"
+            dataKey="adena_min"
+            stroke="#00bfa3"
+            yAxisId="left"
+            legendType="rect"
+            name="Мин. цена (адена)"
+          />
+        )}
+        {currency === 'coin' && (
+          <Line
+            dot={false}
+            strokeWidth={2}
+            strokeLinecap="round"
+            type="monotone"
+            dataKey="coin_avg"
+            stroke="#00ff8f"
+            yAxisId="left"
+            legendType="rect"
+            name="Средняя цена (монета)"
+          />
+        )}
+        {currency === 'coin' && (
+          <Line
+            dot={false}
+            strokeWidth={2}
+            strokeLinecap="round"
+            type="monotone"
+            dataKey="coin_min"
+            stroke="#00bfa3"
+            yAxisId="left"
+            legendType="rect"
+            name="Мин. цена (монета)"
+          />
+        )}
+        <YAxis
+          tickLine={false}
+          yAxisId="left"
+          axisLine={{ stroke: "#ffc048" }}
+          tick={{ fill: '#aaa' }}
+          domain={yDomain}
+          tickCount={5}
+          label={{ value: 'Цена', angle: 90, position: 'insideLeft', fill: '#ffc048' }}
         />
-      </LineChart>
+        <YAxis
+          tickLine={false}
+          yAxisId="right"
+          orientation="right"
+          stroke="#2a3b55"
+          axisLine={{ stroke: "#2a3b55" }}
+          domain={[0, maxVolume * 1.2]}
+          tickCount={5}
+          label={{ value: 'Объём', angle: 90, position: 'insideRight', fill: '#2a3b55' }}
+        />
+      </ComposedChart>
     </ResponsiveContainer>
   );
 }

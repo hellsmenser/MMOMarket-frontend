@@ -17,7 +17,7 @@ export default function ItemPage() {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [selectedMod, setSelectedMod] = useState<string | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<'adena' | 'coin'>('adena');
-  const [aggregation, setAggregation] = useState<'avg' | 'min'>('avg');
+  // aggregation удалён, теперь две линии на одном графике
   const [period, setperiod] = useState<number | 'all'>(30);
   const [history, setHistory] = useState<PriceHistory[] | null>(null);
 
@@ -46,60 +46,66 @@ export default function ItemPage() {
     }
   }, [item]);
 
-  useEffect(() => {
-    setLoadingHistory(true);
-    let modArg: number | null = null;
-    if (selectedMod !== undefined && selectedMod !== null) {
-      modArg = Number(selectedMod);
-    }
-    fetchItemPriceHistory(Number(id), period, modArg, aggregation)
-      .then(data => {
-        setHistory(data);
+useEffect(() => {
+  setLoadingHistory(true);
+  let modArg: number | null = null;
+  if (item?.modifications && item.modifications.length > 0) {
+    const minMod = [...item.modifications].sort()[0];
+    modArg = Number(selectedMod ?? minMod);
+  } else if (selectedMod !== undefined && selectedMod !== null) {
+    modArg = Number(selectedMod);
+  }
+  fetchItemPriceHistory(Number(id), period, modArg)
+    .then(data => {
+      setHistory(data);
+      setLoadingHistory(false);
+    })
+    .catch(err => {
+      if (err?.response?.status === 404) {
+        setHistory(null);
         setLoadingHistory(false);
-      })
-      .catch(err => {
-        if (err?.response?.status === 404) {
-          setHistory(null);
-          setLoadingHistory(false);
-        }
-      });
-  }, [id, period, selectedMod, aggregation]);
+      }
+    });
+}, [id, period, selectedMod, item]);
 
 
+  // Формируем данные для графика из новых полей
   const adenaChartData = useMemo(() => {
     if (!history) return [];
-    return history
-      .filter(entry => entry.adena != null)
-      .map(entry => ({
-        date: entry.timestamp,
-        value: entry.adena,
-        coin_price: entry.coin_price,
-      }));
+    return history.map(entry => ({
+      timestamp: entry.timestamp,
+      adena_avg: entry.adena_avg ?? null,
+      adena_min: entry.adena_min ?? null,
+      adena_volume: entry.adena_volume ?? null,
+      coin_price: entry.coin_price ?? null,
+      value: entry.adena_avg ?? null, // for Table rendering
+    }));
   }, [history]);
 
   const coinChartData = useMemo(() => {
     if (!history) return [];
-    return history
-      .filter(entry => entry.coin != null)
-      .map(entry => ({
-        date: entry.timestamp,
-        value: entry.coin,
-        coin_price: entry.coin_price,
-      }));
+    return history.map(entry => ({
+      timestamp: entry.timestamp,
+      coin_avg: entry.coin_avg ?? null,
+      coin_min: entry.coin_min ?? null,
+      coin_volume: entry.coin_volume ?? null,
+      coin_price: entry.coin_price ?? null,
+      value: entry.coin_avg ?? null, // for Table rendering
+    }));
   }, [history]);
 
 
   // Определяем редкость отдельно для адены и монеты
   const isRareAdena = useMemo(() => {
     if (!history) return false;
-    const adenaPoints = history.filter(h => h.adena != null).length;
+    const adenaPoints = history.filter(h => h.adena_volume != null && h.adena_volume > 0).length;
     const days = period === 'all' ? history.length : period;
     return (adenaPoints / days) < (1 / 7);
   }, [history, period]);
 
   const isRareCoin = useMemo(() => {
     if (!history) return false;
-    const coinPoints = history.filter(h => h.coin != null).length;
+    const coinPoints = history.filter(h => h.coin_volume != null && h.coin_volume > 0).length;
     const days = period === 'all' ? history.length : period;
     return (coinPoints / days) < (1 / 7);
   }, [history, period]);
@@ -223,20 +229,16 @@ export default function ItemPage() {
         )}
       </div>
 
-      <div className="period-selector" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+      <div className="period-selector" style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 16 }}>
         <Radio.Group value={period} onChange={(e) => setperiod(e.target.value)}>
           <Radio.Button value={7}>7д</Radio.Button>
           <Radio.Button value={30}>30д</Radio.Button>
           <Radio.Button value={60}>60д</Radio.Button>
           <Radio.Button value={90}>90д</Radio.Button>
         </Radio.Group>
-        <Radio.Group value={aggregation} onChange={e => setAggregation(e.target.value)}>
-          <Radio.Button value="avg">Среднее</Radio.Button>
-          <Radio.Button value="min">Минимальное</Radio.Button>
-        </Radio.Group>
       </div>
 
-      <ItemHistoryView key={String(selectedMod) + String(period) + String(aggregation)} />
+      <ItemHistoryView key={String(selectedMod) + String(period)} />
     </div>
   );
 
@@ -267,20 +269,14 @@ export default function ItemPage() {
         )}
       </div>
 
-      <div className="period-selector" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+      <div className="period-selector" style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 16 }}>
         <Radio.Group value={period} onChange={(e) => setperiod(e.target.value)}>
           <Radio.Button value={7}>7д</Radio.Button>
           <Radio.Button value={30}>30д</Radio.Button>
           <Radio.Button value={60}>60д</Radio.Button>
           <Radio.Button value={90}>90д</Radio.Button>
         </Radio.Group>
-        <Radio.Group value={aggregation} onChange={e => setAggregation(e.target.value)}>
-          <Radio.Button value="avg">Среднее</Radio.Button>
-          <Radio.Button value="min">Минимальное</Radio.Button>
-        </Radio.Group>
       </div>
-
-      {/* Дублирующийся старый return удалён, теперь используется только ItemHistoryView с isRareAdena/isRareCoin */}
     </div>
   );
 }
