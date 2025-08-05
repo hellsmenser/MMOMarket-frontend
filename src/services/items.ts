@@ -17,8 +17,8 @@ export const fetchItemById = async (itemId: number): Promise<ItemOut> => {
   return res.data;
 };
 
-export const fetchItemPriceHistory = async (itemId: number, period: number | 'all' , modification: number | null, aggregate: 'avg' | 'min'): Promise<PriceHistory[]> => {
-  const res = await api.get(`/prices/${itemId}`, { params: { period, modification, aggregate } });
+export const fetchItemPriceHistory = async (itemId: number, period: number | 'all' , modification: number | null): Promise<PriceHistory[]> => {
+  const res = await api.get(`/prices/${itemId}`, { params: { period, modification } });
   return res.data.map((entry: PriceHistory) => ({
     ...entry,
     timestamp: entry.timestamp
