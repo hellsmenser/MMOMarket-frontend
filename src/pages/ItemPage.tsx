@@ -73,22 +73,24 @@ useEffect(() => {
   const adenaChartData = useMemo(() => {
     if (!history) return [];
     return history.map(entry => ({
-      date: entry.timestamp,
+      timestamp: entry.timestamp,
       adena_avg: entry.adena_avg ?? null,
       adena_min: entry.adena_min ?? null,
       adena_volume: entry.adena_volume ?? null,
       coin_price: entry.coin_price ?? null,
+      value: entry.adena_avg ?? null, // for Table rendering
     }));
   }, [history]);
 
   const coinChartData = useMemo(() => {
     if (!history) return [];
     return history.map(entry => ({
-      date: entry.timestamp,
+      timestamp: entry.timestamp,
       coin_avg: entry.coin_avg ?? null,
       coin_min: entry.coin_min ?? null,
       coin_volume: entry.coin_volume ?? null,
       coin_price: entry.coin_price ?? null,
+      value: entry.coin_avg ?? null, // for Table rendering
     }));
   }, [history]);
 

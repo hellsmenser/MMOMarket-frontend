@@ -43,14 +43,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameT
 };
 
 export default function PriceChart({ data, currency = 'adena' }: Props) {
-  const formatNumber = (num: number) => {
-    if (num === 0) return '0';
-    const absNum = Math.abs(num);
-    if (absNum >= 1_000_000_000) return (num / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'ккк';
-    if (absNum >= 1_000_000) return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'кк';
-    if (absNum >= 1_000) return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'к';
-    return num.toString();
-  };
+  // ...existing code...
   const maxVolume = Math.max(...data.map((d: PriceHistory) => Math.max(d.adena_volume ?? 0, d.coin_volume ?? 0)), 1);
 
   // вычисляем min/max для цен
