@@ -86,7 +86,7 @@ export default function PriceChart({ data, currency = 'adena' }: Props) {
     <ResponsiveContainer width="100%" height={300}>
       <ComposedChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
         <CartesianGrid stroke="#2a3b55" vertical={false} />
-        <XAxis dataKey="date" tickLine={false} axisLine={{ stroke: "#2a3b55" }} tick={{ fill: '#aaa' }} />
+        <XAxis dataKey="timestamp" tickLine={false} axisLine={{ stroke: "#2a3b55" }} tick={{ fill: '#aaa' }} />
         <Tooltip content={<CustomTooltip />} />
         <Legend verticalAlign="top" align="left" height={36} />
         {currency === 'adena' && (

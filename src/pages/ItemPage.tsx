@@ -163,7 +163,7 @@ useEffect(() => {
             children: isRareAdena && hasAdenaRows ? (
               <Table
                 columns={[
-                  { title: 'Дата', dataIndex: 'date', key: 'date' },
+                  { title: 'Дата', dataIndex: 'timestamp', key: 'date' },
                   { title: 'Цена', dataIndex: 'value', key: 'value', render: v => (typeof v === 'number' ? v.toLocaleString() : '-') },
                   {
                     title: 'По курсу (монета)',
