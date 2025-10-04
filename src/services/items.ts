@@ -3,8 +3,19 @@ import type { ItemActivity, ItemOut } from '../types/item';
 import type { PriceHistory } from '../types/price';
 
 export const fetchVolatileItems = async (category_id?: number): Promise<ItemActivity[]> => {
-  const res = await api.get('/items/volatility', { params: {category_id: category_id} });
-  return res.data;
+  const attempt = (url: string) => api.get(url, { params: { category_id }, timeout: 20000 });
+  try {
+    const res = await attempt('items/volatility');
+    return res.data;
+  } catch (e: any) {
+    const isTimeout = e?.code === 'ECONNABORTED';
+    const status = e?.response?.status;
+    if (isTimeout || status === 404 || status === 301 || status === 308) {
+      const retry = await attempt('items/volatility/');
+      return retry.data;
+    }
+    throw e;
+  }
 };
 
 export const searchItems = async (query: string, page: number, page_size: number): Promise<ItemOut[]> => {
@@ -28,6 +39,18 @@ export const fetchItemPriceHistory = async (itemId: number, period: number | 'al
 };
 
 export const fetchCoinPrice = async (): Promise<PriceHistory> => {
-  const res = await api.get('/prices/coin');
-  return res.data ?? 0;
+  const attempt = async (url: string) => api.get(url, { timeout: 15000 });
+  try {
+    const res = await attempt('prices/coin');
+    return res.data ?? 0;
+  } catch (e: any) {
+    const isTimeout = e?.code === 'ECONNABORTED';
+    const status = e?.response?.status;
+    if (isTimeout || status === 404 || status === 301 || status === 308) {
+      // Повтор с trailing slash
+      const retry = await attempt('prices/coin/');
+      return retry.data ?? 0;
+    }
+    throw e;
+  }
 };

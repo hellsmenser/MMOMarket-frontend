@@ -1,12 +1,14 @@
 import { AutoComplete } from 'antd';
 import { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 import type { ItemOut } from '../types/item';
 import { searchItems, fetchCoinPrice } from '../services/items';
 import { formatAutocompleteLabel } from '../utils/autocomplite';
 
 import '../styles/components/HeaderBar.css';
+import '../styles/components/buttons.css';
 
 type ExtendedOption = {
   value: string;
@@ -23,6 +25,7 @@ export default function HeaderBar() {
 
   const navigate = useNavigate();
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { isAuthenticated } = useAuth();
 
   // Получаем цену монеты при маунте
   useEffect(() => {
@@ -60,13 +63,13 @@ export default function HeaderBar() {
       if (results.length === 5) {
         fullOptions.push({
           value: '',
-          isShowAll: true,
-          label: (
-            <div style={{ textAlign: 'center', color: '#00ff8f' }}>
-              Показать все результаты
-            </div>
-          ),
-        });
+            isShowAll: true,
+            label: (
+              <div className="search-show-all">
+                Показать все результаты
+              </div>
+            ),
+          });
       }
 
       fullOptionList.current = fullOptions;
@@ -90,28 +93,30 @@ export default function HeaderBar() {
       <div className="header-logo" onClick={() => navigate('/')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, minHeight: 48, minWidth: 48 }}>
         <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="MMO Market Logo" style={{ height: 48, width: 'auto', display: 'block', objectFit: 'contain' }} />
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-        <span style={{ fontSize: 15, color: '#00ff8f', fontWeight: 500, display: 'inline-block', minWidth: '210px' }}>
-          Цена монеты: <span style={{ color: '#fff', fontWeight: 600, letterSpacing: '2px', display: 'inline-block', minWidth: '110px', textAlign: 'right' }}>
-            {coinPrice !== null ? coinPrice.toLocaleString() : <>&lt;нет данных&gt;</>}
+  {isAuthenticated && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+          <span className="header-coin-label">
+            Цена монеты: <span className="header-coin-value">
+              {coinPrice !== null ? coinPrice.toLocaleString() : <>&lt;нет данных&gt;</>}
+            </span>
           </span>
-        </span>
-        <div className="header-controls">
-          <AutoComplete
-            onSearch={handleSearch}
-            onSelect={handleSelect}
-            placeholder="Поиск по названию"
-            className="search-input"
-            allowClear
-          >
-            {searchOptions.map((option) => (
-              <AutoComplete.Option key={option.value} value={option.value}>
-                {option.label}
-              </AutoComplete.Option>
-            ))}
-          </AutoComplete>
+          <div className="header-controls">
+            <AutoComplete
+              onSearch={handleSearch}
+              onSelect={handleSelect}
+              placeholder="Поиск по названию"
+              className="search-input"
+              allowClear
+            >
+              {searchOptions.map((option) => (
+                <AutoComplete.Option key={option.value} value={option.value}>
+                  {option.label}
+                </AutoComplete.Option>
+              ))}
+            </AutoComplete>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

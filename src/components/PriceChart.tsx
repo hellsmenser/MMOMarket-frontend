@@ -84,7 +84,7 @@ export default function PriceChart({ data, currency = 'adena' }: Props) {
   const chartData = data.map(d => ({ ...d, currencyTooltip: currency }));
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <ComposedChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+      <ComposedChart data={chartData} margin={{ top: 0, right: 30, left: 60, bottom: 0 }}>
         <CartesianGrid stroke="#2a3b55" vertical={false} />
         <XAxis dataKey="timestamp" tickLine={false} axisLine={{ stroke: "#2a3b55" }} tick={{ fill: '#aaa' }} />
         <Tooltip content={<CustomTooltip />} />
@@ -172,6 +172,7 @@ export default function PriceChart({ data, currency = 'adena' }: Props) {
           domain={yDomain}
           tickCount={5}
           tickFormatter={formatK}
+          width={50}
         />
         <YAxis
           tickLine={false}
@@ -182,6 +183,7 @@ export default function PriceChart({ data, currency = 'adena' }: Props) {
           domain={[0, maxVolume * 1.2]}
           tickCount={5}
           tickFormatter={formatK}
+          width={50}
         />
       </ComposedChart>
     </ResponsiveContainer>

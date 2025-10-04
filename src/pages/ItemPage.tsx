@@ -21,6 +21,19 @@ export default function ItemPage() {
   const [period, setperiod] = useState<number | 'all'>(30);
   const [history, setHistory] = useState<PriceHistory[] | null>(null);
 
+  // update title
+  useEffect(() => {
+    const previous = document.title;
+    if (item?.name) {
+      document.title = `MMO Market - ${item.name}`;
+    } else {
+      document.title = 'MMO Market';
+    }
+    return () => {
+      document.title = previous;
+    };
+  }, [item?.name]);
+
 
   useEffect(() => {
     setLoadingItem(true);
@@ -69,8 +82,8 @@ useEffect(() => {
 }, [id, period, selectedMod, item]);
 
 
-  // Формируем данные для графика из новых полей
-  // Для графика и таблицы: фильтруем только те дни, где есть цена в выбранной валюте
+  // form data for chart from new fields
+  // for chart and table: filter only those days where there is a price in the selected currency
   const adenaChartData = useMemo(() => {
     if (!history) return [];
     return history
@@ -100,7 +113,7 @@ useEffect(() => {
   }, [history]);
 
 
-  // Определяем редкость отдельно для адены и монеты
+  // rarity check separately for adena and coin
   const isRareAdena = useMemo(() => {
     if (!history) return false;
     const adenaPoints = history.filter(h => h.adena_volume != null && h.adena_volume > 0).length;
@@ -130,7 +143,7 @@ useEffect(() => {
     );
   }
 
-  // Вынесенная часть для графика и истории
+  // Item history view
   function ItemHistoryView() {
     if (loadingHistory) {
       return (
@@ -147,7 +160,7 @@ useEffect(() => {
       );
     }
 
-    // Проверка наличия валидных данных для таблицы
+    // Check for valid data presence for table
     const hasAdenaRows = adenaChartData.some(d => typeof d.value === 'number' && d.value !== 0);
     const hasCoinRows = coinChartData.some(d => typeof d.value === 'number' && d.value !== 0);
 
@@ -265,44 +278,6 @@ useEffect(() => {
       </div>
 
       <ItemHistoryView key={String(selectedMod) + String(period)} />
-    </div>
-  );
-
-  return (
-    <div className="item-page">
-      <div className="item-header">
-        <Title level={2} className="item-title">{item?.name ?? ''}</Title>
-        {(item as ItemOut).modifications && (item as ItemOut).modifications.length > 0 && (
-          <>
-            {(item as ItemOut).modifications.length > 1 && (
-              <div style={{ marginBottom: 8, color: '#ff9800', fontSize: 13 }}>
-                Обратите внимание: для предметов с несколькими модификациями их определение производится автоматически, поэтому реальная модификация может отличаться от отображаемой.
-              </div>
-            )}
-            <Select
-              className="modification-select"
-              value={selectedMod}
-              onChange={setSelectedMod}
-              placeholder="Выберите модификацию"
-              allowClear
-              size="middle"
-            >
-              {(item as ItemOut).modifications.map((mod) => (
-                <Option key={mod} value={mod}>{mod}</Option>
-              ))}
-            </Select>
-          </>
-        )}
-      </div>
-
-      <div className="period-selector" style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 16 }}>
-        <Radio.Group value={period} onChange={(e) => setperiod(e.target.value)}>
-          <Radio.Button value={7}>7д</Radio.Button>
-          <Radio.Button value={30}>30д</Radio.Button>
-          <Radio.Button value={60}>60д</Radio.Button>
-          <Radio.Button value={90}>90д</Radio.Button>
-        </Radio.Group>
-      </div>
     </div>
   );
 }

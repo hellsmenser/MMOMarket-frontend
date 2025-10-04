@@ -1,0 +1,23 @@
+.login-btn {
+  background: transparent !important;
+  border: 1px solid var(--accent-border) !important;
+  color: var(--accent-soft) !important;
+  font-weight: 500;
+  letter-spacing: .5px;
+  box-shadow: none;
+  transition: border-color .2s, color .2s, box-shadow .2s, background-color .2s;
+  height: 40px;
+}
+
+.login-btn:hover, .login-btn:focus {
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+  background: rgba(0,255,143,0.05) !important;
+  box-shadow: 0 0 0 2px #00ff8f22;
+}
+
+.login-btn:active {
+  background: rgba(0,255,143,0.12) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}

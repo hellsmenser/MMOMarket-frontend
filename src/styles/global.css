@@ -7,3 +7,10 @@ html, body, #root {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen;
   box-sizing: border-box;
 }
+
+:root {
+  --accent: #00ff8f;            /* primary accent */
+  --accent-soft: #35ffac;       /* slightly softer */
+  --accent-muted: #00ff8f99;    /* translucent */
+  --accent-border: #00ff8f44;
+}

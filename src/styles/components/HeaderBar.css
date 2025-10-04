@@ -21,7 +21,7 @@
 }
 
 .header-logo {
-  color: #00ff8f;
+  color: var(--accent);
   font-weight: bold;
   font-size: 20px;
   cursor: pointer;
@@ -30,4 +30,26 @@
 .header-controls {
   display: flex;
   gap: 12px;
+}
+
+.header-coin-label {
+  font-size: 15px;
+  color: var(--accent-soft);
+  font-weight: 500;
+  display: inline-block;
+  min-width: 210px;
+}
+
+.header-coin-value {
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 2px;
+  display: inline-block;
+  min-width: 110px;
+  text-align: right;
+}
+
+.search-show-all {
+  text-align: center;
+  color: var(--accent-soft);
 }
