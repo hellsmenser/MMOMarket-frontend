@@ -11,7 +11,7 @@ type Mode = 'login' | 'register';
 export default function Auth() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { setToken, isAuthenticated } = useAuth();
+  const { refreshSession, isAuthenticated } = useAuth();
 
   const [mode, setMode] = useState<Mode>('login');
   const [loading, setLoading] = useState(false);
@@ -50,15 +50,14 @@ export default function Auth() {
     }
     setLoading(true); setError(null);
     try {
-      const data = await login({ username: username.trim(), password });
-      const token = data?.token || data?.access_token || data?.authToken;
-      if (token) setToken(token);
+  await login({ username: username.trim(), password });
+  await refreshSession();
       message.success('Успешный вход');
       navigate('/', { replace: true });
     } catch (e: any) {
       setError(e?.response?.data?.detail || 'Ошибка входа');
     } finally { setLoading(false); }
-  }, [loading, loginValues, navigate, setToken]);
+  }, [loading, loginValues, navigate, refreshSession]);
 
   const doRegister = useCallback(async () => {
     if (loading) return;
@@ -71,12 +70,28 @@ export default function Auth() {
       setError('Пароли не совпадают');
       return;
     }
+    // Password basic validation: >= 8 chars, only ASCII letters/digits/symbols, at least one latin letter, forbid Cyrillic/other alphabets
+    if (password.length < 8) {
+      setError('Пароль должен быть не короче 8 символов');
+      return;
+    }
+    // forbid any non-ASCII to exclude кириллицу и прочие алфавиты (allow common symbols)
+    if (!/^[\x20-\x7E]+$/.test(password)) {
+      setError('Пароль должен содержать только латинские символы и стандартные знаки');
+      return;
+    }
+    // require at least one latin letter
+    if (!/[A-Za-z]/.test(password)) {
+      setError('Пароль должен содержать хотя бы одну латинскую букву');
+      return;
+    }
     setLoading(true); setError(null);
     try {
-      const data = await register({ username: username.trim(), password, invite_code: invite_code.trim() });
-      const token = data?.token || data?.access_token || data?.authToken;
-      if (token) {
-        setToken(token);
+  await register({ username: username.trim(), password, invite_code: invite_code.trim() });
+      // if server auto-logs in, refresh session to update status
+      await refreshSession();
+      const autoLogged = true; // isAuthenticated; // may not be updated yet
+      if (autoLogged) {
         message.success('Регистрация успешна');
         navigate('/', { replace: true });
       } else {
@@ -86,7 +101,7 @@ export default function Auth() {
     } catch (e: any) {
       setError(e?.response?.data?.detail || 'Ошибка регистрации');
     } finally { setLoading(false); }
-  }, [loading, registerValues, navigate, setToken]);
+  }, [loading, registerValues, navigate, refreshSession]);
 
   return (
     <div style={{ maxWidth: 420, margin: '80px auto', background: '#132b44', padding: 32, borderRadius: 16, boxShadow: '0 4px 24px -8px #000c' }}>

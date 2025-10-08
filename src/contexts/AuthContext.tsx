@@ -2,72 +2,41 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { me } from '../services/auth';
 import { api } from '../services/api';
 
-export const AUTH_TOKEN_KEY = 'MMOMarket_Access_Cookie';
+// Cookie-only session: не храним токен в localStorage
+export type AuthStatus = 'checking' | 'auth' | 'guest';
 
 type AuthContextValue = {
-  token: string | null;
+  status: AuthStatus;
   isAuthenticated: boolean;
-  setToken: (token: string | null) => void;
-  logout: () => void;
+  refreshSession: () => Promise<void>;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [token, setTokenState] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem('token');
-    } catch {
-      return null;
-    }
-  });
+  const [status, setStatus] = useState<AuthStatus>('checking');
 
-  const setToken = useCallback((value: string | null) => {
-    setTokenState(value);
+  const refreshSession = useCallback(async () => {
     try {
-      if (value) {
-        localStorage.setItem(AUTH_TOKEN_KEY, value);
-      } else {
-        localStorage.removeItem(AUTH_TOKEN_KEY);
-      }
+      await me();
+      setStatus('auth');
     } catch {
-      /* ignore */
+      setStatus('guest');
     }
   }, []);
 
-  const logout = useCallback(() => setToken(null), [setToken]);
-
-  // Sync with storage changes (e.g., other tabs)
-  useEffect(() => {
-    const handler = (e: StorageEvent) => {
-  if (e.key === AUTH_TOKEN_KEY) {
-        setTokenState(e.newValue);
-      }
-    };
-    window.addEventListener('storage', handler);
-    return () => window.removeEventListener('storage', handler);
+  const logout = useCallback(async () => {
+    setStatus('guest');
+    if (window.location.hash !== '#/auth') {
+      window.location.hash = '#/auth';
+    }
   }, []);
 
-  // Server-side cookie validation
+  // Initial check
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      if (!token) return; // nothing to validate
-      try {
-        await me();
-      } catch (e: any) {
-        // check for 401/403
-        if (!cancelled) {
-          setToken(null);
-          // force redirect (HashRouter)
-          if (window.location.hash !== '#/auth') {
-            window.location.hash = '#/auth';
-          }
-        }
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [token, setToken]);
+    refreshSession();
+  }, [refreshSession]);
 
   // Global interceptor to catch 401/403 across the app
   useEffect(() => {
@@ -82,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (!url.includes('auth/login') && !url.includes('auth/register')) {
             if (!redirecting) {
               redirecting = true;
-              setToken(null); // clear token
+              setStatus('guest');
               // Direct redirect (HashRouter)
               if (window.location.hash !== '#/auth') {
                 window.location.hash = '#/auth';
@@ -98,12 +67,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       api.interceptors.response.eject(id);
     };
-  }, [setToken]);
+  }, []);
 
   const value: AuthContextValue = {
-    token,
-    isAuthenticated: !!token,
-    setToken,
+    status,
+    isAuthenticated: status === 'auth',
+    refreshSession,
     logout,
   };
 

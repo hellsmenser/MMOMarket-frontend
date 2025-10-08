@@ -40,46 +40,52 @@ export default function ItemPage() {
     fetchItemById(Number(id))
       .then(data => {
         setItem(data);
+        // set default mod if available
+        if (data?.modifications && data.modifications.length > 0) {
+          const minMod = [...data.modifications].sort()[0];
+          setSelectedMod(minMod);
+        } else {
+          setSelectedMod(undefined);
+        }
         setLoadingItem(false);
       })
       .catch(err => {
         if (err?.response?.status === 404) {
           setItem(null);
+          setSelectedMod(undefined);
           setLoadingItem(false);
         }
       });
   }, [id]);
 
   useEffect(() => {
-    if (item?.modifications && item.modifications.length > 0) {
-      const minMod = [...item.modifications].sort()[0];
-      setSelectedMod(minMod);
-    } else {
-      setSelectedMod(undefined);
-    }
-  }, [item]);
-
-useEffect(() => {
-  setLoadingHistory(true);
-  let modArg: number | null = null;
-  if (item?.modifications && item.modifications.length > 0) {
-    const minMod = [...item.modifications].sort()[0];
-    modArg = Number(selectedMod ?? minMod);
-  } else if (selectedMod !== undefined && selectedMod !== null) {
-    modArg = Number(selectedMod);
-  }
-  fetchItemPriceHistory(Number(id), period, modArg)
-    .then(data => {
-      setHistory(data);
-      setLoadingHistory(false);
-    })
-    .catch(err => {
-      if (err?.response?.status === 404) {
-        setHistory(null);
-        setLoadingHistory(false);
+    // don't fetch history until item is loaded
+    if (loadingItem || !item) return;
+    setLoadingHistory(true);
+    let modArg: number | null = null;
+    if (item.modifications && item.modifications.length > 0) {
+      if (selectedMod) {
+        modArg = Number(selectedMod);
+      } else {
+        // fallback (должно быть установлено выше, но на всякий случай)
+        const minMod = [...item.modifications].sort()[0];
+        modArg = Number(minMod);
       }
-    });
-}, [id, period, selectedMod, item]);
+    } else if (selectedMod !== undefined && selectedMod !== null) {
+      modArg = Number(selectedMod);
+    }
+    fetchItemPriceHistory(Number(id), period, modArg)
+      .then(data => {
+        setHistory(data);
+        setLoadingHistory(false);
+      })
+      .catch(err => {
+        if (err?.response?.status === 404) {
+          setHistory(null);
+          setLoadingHistory(false);
+        }
+      });
+  }, [id, period, selectedMod, item, loadingItem]);
 
 
   // form data for chart from new fields
