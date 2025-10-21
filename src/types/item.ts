@@ -16,3 +16,8 @@ export interface ItemOut {
   tolerance: number;
   modifications: string[];
 }
+
+export interface SearchItemsResponse {
+  Items: ItemOut[];
+  Total: number;
+}

@@ -120,7 +120,7 @@ export default [
     },
   },
 {
-  url: '/api/search',
+  url: '/api/items/search',
   method: 'get',
   response: ({ query }) => {
     const allItems = [
@@ -171,8 +171,25 @@ export default [
       }
     ];
 
-    const q = (query.q || '').toLowerCase();
-    return allItems.filter(item => item.name.toLowerCase().includes(q));
+    const q = (query.query || query.q || '').toLowerCase();
+    const filtered = allItems.filter(item => item.name.toLowerCase().includes(q));
+    
+    // Поддержка пагинации
+    const page = parseInt(query.page || '1', 10);
+    const pageSize = parseInt(query.page_size || '20', 10);
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    
+    return {
+      Items: filtered.slice(start, end).map(item => ({
+        id: item.id,
+        name: item.name,
+        category: { id: 1, name: item.category },
+        tolerance: 0,
+        modifications: []
+      })),
+      Total: filtered.length
+    };
   },
 },
 {

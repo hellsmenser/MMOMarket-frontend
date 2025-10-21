@@ -52,7 +52,9 @@ export default function HeaderBar() {
         return;
       }
 
-      const results = await searchItems(value, 1, 5);
+      const searchResponse = await searchItems(value, 1, 5);
+      const results = searchResponse.Items;
+      const total = searchResponse.Total;
 
       const fullOptions: ExtendedOption[] = results.map((item) => ({
         value: item.name,
@@ -60,13 +62,13 @@ export default function HeaderBar() {
         label: formatAutocompleteLabel(item),
       }));
 
-      if (results.length === 5) {
+      if (total > results.length) {
         fullOptions.push({
           value: '',
             isShowAll: true,
             label: (
               <div className="search-show-all">
-                Показать все результаты
+                Показать все результаты ({total})
               </div>
             ),
           });

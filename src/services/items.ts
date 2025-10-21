@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { ItemActivity, ItemOut } from '../types/item';
+import type { ItemActivity, ItemOut, SearchItemsResponse } from '../types/item';
 import type { PriceHistory } from '../types/price';
 
 export const fetchVolatileItems = async (category_id?: number): Promise<ItemActivity[]> => {
@@ -18,7 +18,7 @@ export const fetchVolatileItems = async (category_id?: number): Promise<ItemActi
   }
 };
 
-export const searchItems = async (query: string, page: number, page_size: number): Promise<ItemOut[]> => {
+export const searchItems = async (query: string, page: number, page_size: number): Promise<SearchItemsResponse> => {
   const res = await api.get('/items/search', { params: { query: query, page: page, page_size: page_size } });
   return res.data;
 };
