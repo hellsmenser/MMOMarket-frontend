@@ -48,7 +48,7 @@ export const fetchCoinPrice = async (): Promise<PriceHistory> => {
     const status = e?.response?.status;
     if (isTimeout || status === 404 || status === 301 || status === 308) {
       // Повтор с trailing slash
-      const retry = await attempt('prices/coin/');
+      const retry = await attempt('prices/coin');
       return retry.data ?? 0;
     }
     throw e;

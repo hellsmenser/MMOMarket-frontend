@@ -1,6 +1,6 @@
 // CLEAN FILE REPLACEMENT
 import { useState, useEffect, useCallback } from 'react';
-import { Tabs, Input, Button, Alert, message } from 'antd';
+import { Tabs, Input, Button, Alert, message, Tooltip } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { login, register } from '../services/auth';
 import { useAuth } from '../contexts/AuthContext';
@@ -173,7 +173,20 @@ export default function Auth() {
               />
             </label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={{ fontSize: 13 }}>Инвайт код</span>
+              <span style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                Инвайт код
+                <Tooltip
+                  title={<span>Получить инвайт-код можно, став спонсором на <a href="https://boosty.to/hellsmenser" target="_blank" rel="noopener noreferrer" style={{ color: '#00ff8f', textDecoration: 'underline' }}>Boosty</a>.</span>}
+                  placement="right"
+                >
+                  <span style={{ cursor: 'pointer', color: '#00ff8f', fontWeight: 600, fontSize: 16, lineHeight: 1, display: 'inline-flex', alignItems: 'center' }}>
+                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: 2 }}>
+                      <circle cx="10" cy="10" r="9" stroke="#00ff8f" strokeWidth="2" fill="#132b44" />
+                      <text x="10" y="15" textAnchor="middle" fontSize="13" fontWeight="bold" fill="#00ff8f">?</text>
+                    </svg>
+                  </span>
+                </Tooltip>
+              </span>
               <Input
                 disabled={loading}
                 value={registerValues.invite_code}

@@ -18,7 +18,21 @@ const Footer: React.FC = () => (
           </span>
         </div>
         {/* 2 колонка: пустая */}
-        <div className="footer-col"></div>
+        {/* 2 колонка: Boosty поддержка */}
+        <div className="footer-col footer-boosty">
+          <a
+            href="https://boosty.to/hellsmenser"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="boosty-link"
+            aria-label="Поддержать автора на Boosty"
+          >
+            <span className="boosty-icon" aria-hidden="true">
+              <img src="/boosty.svg" width={180} height={52} alt="Boosty" />
+            </span>
+          </a>
+          <span className="boosty-caption">Поддержать развитие проекта</span>
+        </div>
         {/* 3 колонка: RB bot */}
         <div className="footer-col footer-rb-bot">
           <span>
